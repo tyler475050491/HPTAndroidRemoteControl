@@ -22,8 +22,16 @@ android {
         applicationId "com.hpt.adbtool"
         minSdk 24
         targetSdk 34
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 11
+        versionName "1.1.0"
+        // 每次打包都会生成新的构建标记（月日-时分），用于区分同一版本号下的不同包
+        def stamp = new java.text.SimpleDateFormat("MMdd-HHmm").format(new java.util.Date())
+        resValue "string", "build_stamp", stamp
+    }
+
+    // AGP 9 默认关闭 resValue / BuildConfig 生成，这里只打开 resValues（构建标记用）
+    buildFeatures {
+        resValues true
     }
 
     signingConfigs {
@@ -92,7 +100,16 @@ tasks.register('syncBuiltinApk') {
     doLast {
         def apks = apkDir.listFiles()?.findAll { it.isFile() && it.name.toLowerCase().endsWith('.apk') }
         if (!apks) {
-            throw new GradleException("apk 目录下没有找到安装包: ${apkDir}")
+            // 允许「本次不内置安装包」：清掉旧容器，只留一份空元信息，
+            // App 内安装弹窗会显示「未内置安装包」，并只保留「从手机选择 APK」的入口
+            assetsDir.mkdirs()
+            if (outEnc.isFile() && outEnc.delete()) {
+                println "[内置包] 已删除旧容器 ${outEnc.name}"
+            }
+            outIdx.setText("package=\nlabel=\nversionName=\nversionCode=\n"
+                    + "size=0\nencSize=0\nsha256=\n", 'UTF-8')
+            println "[内置包] apk 目录下没有安装包（${apkDir}）→ 本次打包不内置安装包"
+            return
         }
         def src = apks.sort { it.lastModified() }.last()
         assetsDir.mkdirs()
@@ -201,6 +218,8 @@ tasks.register('syncBuiltinApk') {
         }
         def pkg = ''
         def label = ''
+        def verName = ''
+        def verCode = ''
         if (aapt != null) {
             // aapt.exe 在中文路径下会解析失败，先复制到临时 ASCII 目录
             def probe = null
@@ -216,15 +235,20 @@ tasks.register('syncBuiltinApk') {
                 if (m.find()) { pkg = m.group(1) }
                 def l = text =~ /application-label:'([^']+)'/
                 if (l.find()) { label = l.group(1) }
+                def vc = text =~ /versionCode='([^']+)'/
+                if (vc.find()) { verCode = vc.group(1) }
+                def vn = text =~ /versionName='([^']*)'/
+                if (vn.find()) { verName = vn.group(1) }
             } catch (Exception e) {
                 println "[内置包] 解析异常: ${e.message}"
             } finally {
                 if (probe != null) probe.delete()
             }
         }
-        outIdx.setText("package=${pkg}\nlabel=${label}\nsize=${plainSize}\n"
-                + "encSize=${encBytes}\nsha256=${sha256}\n", 'UTF-8')
-        println "[内置包] package=${pkg} label=${label}"
+        outIdx.setText("package=${pkg}\nlabel=${label}\n"
+                + "versionName=${verName}\nversionCode=${verCode}\n"
+                + "size=${plainSize}\nencSize=${encBytes}\nsha256=${sha256}\n", 'UTF-8')
+        println "[内置包] package=${pkg} label=${label} version=${verName}(${verCode})"
         if (pkg == null || pkg.isEmpty()) {
             println "[内置包] 警告：未能解析出包名，请检查 aapt 是否可用"
         }

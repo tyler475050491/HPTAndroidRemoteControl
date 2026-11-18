@@ -594,3 +594,146 @@ if (cur != null && cur != session && (cur.mirroring || scrcpy != null || mirror 
 | 两台同时在线 | 列表里 226（投屏中）/ P8（已连接）各自独立按钮，互不影响 | 是 |
 
 > 注意：`max_size=1024` 对竖屏设备（800x1280）出的画面是 `640x1024`，对横屏（1280x720）是 `1024x576`——都是按长边缩放到 1024 的结果，属预期行为。
+## 17. 启动信息 / 版本徽标 / 本机 IP（2026-11-18）
+
+### 17.1 需求
+
+1. **启动不再输出内置 APK 信息** —— 原启动日志打印「内置 APK：xxx 包名 xxx 23.1 MB」，等于告诉别人 App 里藏了安装包。
+2. **标题右侧显示版本信息，每次打包都要更新** —— 便于用户区分手上这个包是哪一次构建的。
+3. **启动时把手机本机 IP 打到日志** —— 方便用户确认当前网段，搜索设备时用得上。
+
+### 17.2 落地
+
+**① 内置包信息不再进日志**
+
+`logBuiltinInfo()` 改名为 `prepareBuiltin()`，只剩「清理历史版本遗留的明文缓存」这个动作，不再调用 `log()`：
+
+```java
+private void prepareBuiltin() {
+    File stale = new File(getCacheDir(), "builtin.apk");
+    if (stale.isFile()) stale.delete();
+}
+```
+
+包名/应用名仍然由 `readBuiltinMeta()` 读取，但只服务于两处内部用途：安装弹窗显示应用名、安装完成后的校验提示。日志窗口一个字都不出现。
+
+**② 版本徽标**
+
+- `app\build.gradle`：`versionCode 3` / `versionName "1.0.2"`，并在 `defaultConfig` 里生成每次构建都不同的标记：
+  ```groovy
+  def stamp = new java.text.SimpleDateFormat("MMdd-HHmm").format(new java.util.Date())
+  resValue "string", "build_stamp", stamp
+  ```
+- **AGP 9 坑**：`resValue` 默认关闭，必须显式打开，否则构建直接失败（`defaultConfig contains custom resource values, but the feature is disabled`）：
+  ```groovy
+  buildFeatures { resValues true }
+  ```
+- 布局：标题栏里标题仍是 `match_parent + gravity=center`（保持居中不变），版本徽标放在**标题下方单独一行、右对齐**（`layout_gravity="end"`，10sp，半透明白色圆角底 `bg_ver_badge.xml`）。
+  > 第一版尝试把徽标浮在标题右侧同一行，实测与居中标题重叠（详见截图 `doc\shot_f1_launch_s.jpg`），故改为换行右对齐。
+- 运行时文字：`v1.0.2 · 1118-0901` —— 版本号来自 `PackageManager`（不硬编码），构建标记来自 `R.string.build_stamp`。
+
+**③ 本机 IP**
+
+`localIp()` 遍历 `NetworkInterface`，优先 `wlan*` 网卡上的 IPv4，跳过回环与链路本地地址；拿不到就返回「未获取到本机 IP（请确认手机已连接 Wi-Fi）」，不抛异常。
+
+启动日志三行：
+```
+INFO HPT移动端ADB助手 已启动 —— 纯应用层 ADB 客户端，设备无需 root
+INFO 版本 v1.0.2（versionCode 3 · 构建 1118-0901）
+INFO 本机 IP：192.168.0.122（wlan0）
+```
+
+### 17.3 验证（宿主 Redmi Note 13 Pro，实测机型 IP 已变为 192.168.0.122）
+
+| 项目 | 结果 | 证据 |
+|---|---|---|
+| 启动日志无内置包信息 | 只有「已启动 / 版本 / 本机 IP」三行 | `doc\shot_f2_version_s.jpg` |
+| 版本徽标 | 标题居中显示「HPT移动端ADB助手」，下方右侧徽标 `v1.0.2 · 1118-0901`，不重叠 | 同上 |
+| 本机 IP | `192.168.0.122（wlan0）`，与 `ip addr show wlan0` 一致 | 同上 + logcat |
+| 版本号来源 | `aapt dump badging` 读出 `versionCode='3' versionName='1.0.2'` | 是 |
+| 覆盖安装 | 同证书 `install -r` 直接成功，原有地址偏好保留 | 是 |
+
+**交付包**：`HPT远控.apk` 24,359,020 B，SHA-256 `CE7F8745F6F82755547CBAA47D4150E57A46478EDA51F89E6CB293C12FC98575`。
+## 18. 投屏按钮两态配色（2026-11-18）
+
+### 18.1 需求
+
+投屏中的「停止」按钮改成红色；停止投屏后颜色切回原来的蓝色。
+
+### 18.2 落地
+
+新增 `applyMirrorButton(Session s, boolean mirroring)` 统一管理行内投屏按钮的外观，避免在多处零散 `setText` 后状态不一致：
+
+```java
+private void applyMirrorButton(Session s, boolean mirroring) {
+    if (s == null || s.btnMirror == null) return;
+    if (mirroring) {
+        s.btnMirror.setText(R.string.btn_mirror_stop);
+        s.btnMirror.setBackgroundTintList(ColorStateList.valueOf(
+                getResources().getColor(R.color.danger, getTheme())));   // #D32F2F
+    } else {
+        s.btnMirror.setText(s.discovered ? R.string.btn_link : R.string.btn_mirror);
+        s.btnMirror.setBackgroundTintList(ColorStateList.valueOf(
+                getResources().getColor(R.color.primary, getTheme())));  // #1565C0
+    }
+}
+```
+
+三处调用点：
+- `toggleMirror()` 启动投屏 → `applyMirrorButton(session, true)`
+- `finishMirror()` 停止投屏 → `applyMirrorButton(s, false)`
+- `updateRow()` 刷新行状态 → `applyMirrorButton(s, s.mirroring)`（用当前真实状态，不会把正在投屏的行刷回蓝色）
+
+颜色用的是 `colors.xml` 既有 `@color/danger`（#D32F2F），比卸载按钮的 #C62828 稍亮一点，在白色行卡片上更明确「这是危险操作」；未投屏仍是 `@color/primary`（#1565C0），与「连接设备」按钮同色系。
+
+### 18.3 验证（真机 Redmi + HPT-P8，设备 IP 已变为 192.168.0.49）
+
+| 状态 | 按钮外观 | 证据 |
+|---|---|---|
+| 投屏中 | 红底「停止」，时长/帧率 640x1024 10.6 FPS 正常 | `doc\shot_g1_stop_red_s.jpg` |
+| 点「停止」后 | 立刻变回蓝底「投屏」，状态文字回到「已连接」，画布回「未投屏」 | `doc\shot_g2_back_blue_s.jpg` |
+| 未连接（仅发现） | 蓝底「连接」 | `doc\shot_g2_back_blue_s.jpg` 第二行 |
+| 日志 | `INFO 投屏结束：已停止` | logcat |
+
+**交付包**：`HPT远控.apk` 24,359,106 B，SHA-256 `A3935434A865E2F7BE79C13513E49ED7B2910834523A86F27E118D201C38E7E9`（versionName 1.0.3 / versionCode 4，构建标记 1118-0905）。
+## 19. 安装弹窗改版：随包信息 / 自选 APK / 空态（2026-11-18，v1.0.4~1.0.9）
+
+**需求**
+- 点「安装软件」先弹窗，默认显示随包携带的安装包信息：应用名称、包名、版本、大小。
+- 打包时 `apk\` 目录没放 APK：弹窗不显示任何安装包信息（空态），也不能凭空安装。
+- 弹窗内可「从手机选择 APK」，用设备本地文件管理器挑一个安装包，作为本次安装源。
+- 弹窗界面不出现「内置」等暴露资源来源的关键词。
+- 选完自选包不自动安装，必须再点右下角固定按钮「安装应用」。
+- 两者都没有（无随包资源、未选文件）时点「安装应用」→ Toast「请选择APK安装包文件」。
+
+**实现要点**
+1. 构建期（`app\build.gradle` → `syncBuiltinApk`）
+   - `apk\` 为空：不抛异常，删 `hpt_payload.dat`，写空 `payload.idx`（`package=/label=/versionName=/versionCode=/size=0/encSize=0/sha256=`）。
+   - 有 APK：aapt 解析 `package/label/versionName/versionCode`，4MB 分块 AES-256-GCM 加密输出 `hpt_payload.dat`，索引写 `payload.idx`。
+2. 运行时元信息（`MainActivity`）
+   - `BuiltinMeta{ pkg, label, versionName, versionCode, size, ... }`；`hasBuiltin(meta)` 只判 `size>0`。
+   - `versionText(meta)` 输出 `P8-Hi V5.0.4（versionCode 504）`；label 缺省为「未命名应用」（避免出现「内置」字样）。
+3. 弹窗结构（状态式，不是一次性消息框）
+   - 字段：`installDialog`、`installInfoView`、`installSession`、`pickedUri/pickedName/pickedSize`。
+   - 正文三段：`目标设备：<名>` / `待安装应用：应用名称·包名·版本·大小`（空态则一句提示） / `已选择安装包：<文件名>（<大小>）` 或 `无`。
+   - 按钮：`从手机选择 APK`（neutral）/ `取消`（negative，不清空已选包）/ `安装应用`（positive，文字固定）。
+   - positive 用 `getButton(BUTTON_POSITIVE).setOnClickListener` 自行接管，**不自动关窗**：有 `pickedUri` → `installFromUri`；否则有随包资源 → `doInstall`；都没有 → Toast 并保持窗口。
+4. 自选包链路
+   - `pickApkFromPhone()`：`ACTION_GET_CONTENT` + `application/vnd.android.package-archive` + `CATEGORY_OPENABLE` + `createChooser`，`REQ_PICK_APK=0x1001`，期间用 `pendingInstallSession` 记住目标设备。
+   - `onActivityResult()`：只取 `Uri`，`queryPickInfo()` 读 `OpenableColumns.DISPLAY_NAME/SIZE`，写入 `picked*`，刷新弹窗正文并 Toast「请点「安装应用」开始安装」——**不再自动安装**。
+   - `installFromUri()`：worker 线程 `getContentResolver().openInputStream(uri)` → `ensureAlive()` → `AdbDevice.installApk(in, size, listener)`；日志/Toast/重连与随包安装一致。
+5. `AdbDevice.installApk` 支持未知大小
+   - `size<=0`：进度步长 1MB，校验改为「实际收到字节 > 0」，并记录实际字节数；`size>0` 仍严格比对期望值。
+6. 崩溃修复
+   - 曾因复用同一个 `TextView` 作为 `AlertDialog.setView()` 的内容，第二次 `show()` 抛 `IllegalStateException: The specified child already has a parent`。改为每次新建 `TextView`。
+
+**真机验证**（Redmi Note 13 Pro 控制 HPT-P8 `192.168.0.49:5555`）
+- 空态构建：弹窗只显示空态提示 + 「已选择安装包：无」+ 三按钮；点「安装应用」弹「请选择APK安装包文件」且窗口不关（`shot_i1_empty_dialog_s.jpg`、`shot_i3_no_pick_s.jpg`）。
+- 正常构建：显示「海底捞考勤系统 / com.hpt.face / P8-Hi V5.0.4（versionCode 504）/ 23.1 MB」，无「内置」字样（`shot_j1_dialog_new_s.jpg`）。
+- 自选安装：选 `HPT_test.apk` → 弹窗显示「已选择安装包：HPT_test.apk（23.2 MB）」，未自动上传；重连后仍保留选择；点「安装应用」→ 上传 100% → `已删除设备临时文件` → `安装成功`，P8 上出现 `package:com.hpt.adbtool`（`shot_j2_picked_s.jpg`、`shot_k2_reopen_s.jpg`）。
+- 测试痕迹（P8 上的测试包、手机 Download 里的测试 APK）均已清理。
+
+**已知限制 / 注意**
+- 该设备 adbd 连接约 20 秒后会主动断一次，选完包往往需要「取消 → 重新连接 → 安装软件 → 安装应用」；已选 APK 会保留，不会丢。
+- 自选包必须是单个完整 APK；拆分包 / AAB 需先合并。
+- 文件选择器由系统/第三方文件管理器提供，不同机型界面不同；测试机默认根目录是「应用双开数据」（`/storage/emulated/999`），选包时注意切换存储位置。

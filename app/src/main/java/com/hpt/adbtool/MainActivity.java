@@ -3,7 +3,12 @@ package com.hpt.adbtool;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.OpenableColumns;
 import android.content.res.AssetManager;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
@@ -64,6 +69,8 @@ public class MainActivity extends Activity implements AdbLog {
 
     private static final int MAX_LOG_LINES = 400;
     private static final int DEFAULT_PORT = 5555;
+    /** 从手机本地选 APK 的 requestCode */
+    private static final int REQ_PICK_APK = 0x1001;
     /** 网段扫描并发数 */
     private static final int SCAN_THREADS = 16;
     /** 扫描的网段范围（x.x.x.1 ~ x.x.x.254） */
@@ -98,6 +105,8 @@ public class MainActivity extends Activity implements AdbLog {
     private ImageView btnFullscreen;
     private TextView tvLog;
     private ScrollView svLog;
+    /** 标题栏右侧的版本徽标 */
+    private TextView tvVersion;
     /** 卸载弹窗里的计数标题与列表容器（卸载成功一行后刷新计数） */
     private TextView appListTip;
     private LinearLayout appListBox;
@@ -127,6 +136,15 @@ public class MainActivity extends Activity implements AdbLog {
     private boolean suppressCheck;
     private String lastFrameInfo = "";
     private AlertDialog progressDialog;
+    /** 从手机选 APK 期间记住目标设备（文件选择器会离开当前界面） */
+    private Session pendingInstallSession;
+    /** 安装弹窗与其内容视图：用户选完本地 APK 后回到界面继续在此弹窗里确认安装 */
+    private AlertDialog installDialog;
+    private TextView installInfoView;
+    private Session installSession;
+    private Uri pickedUri;
+    private String pickedName = "";
+    private long pickedSize = -1;
 
     // ------------------------------------------------------------------ model
 
@@ -163,7 +181,9 @@ public class MainActivity extends Activity implements AdbLog {
 
     static class BuiltinMeta {
         String pkg = "";
-        String label = "内置应用";
+        String label = "未命名应用";
+        String versionName = "";
+        String versionCode = "";
         String source = "";
         long size;
         boolean enc;
@@ -199,6 +219,8 @@ public class MainActivity extends Activity implements AdbLog {
         btnFullscreen = findViewById(R.id.btnFullscreen);
         tvLog = findViewById(R.id.tvLog);
         svLog = findViewById(R.id.svLog);
+        tvVersion = findViewById(R.id.tvVersion);
+        tvVersion.setText("v" + versionName() + " · " + getString(R.string.build_stamp));
 
         findViewById(R.id.btnRotate).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -370,8 +392,12 @@ public class MainActivity extends Activity implements AdbLog {
             }
         });
 
-        log(INFO, "HPT移动端ADB助手 已启动 —— 纯应用层 ADB 客户端，设备无需 root");
-        logBuiltinInfo();
+        log(INFO, "HPT移动端ADB助手 已启动 —— 纯应用层 ADB 客户端");
+        log(INFO, "版本 v" + versionName() + "（versionCode " + versionCode() + " · 构建 "
+                + getString(R.string.build_stamp) + "）");
+        log(INFO, "本机 IP：" + localIp());
+        // 内置包元信息只做内部清理与安装弹窗使用，不再往日志窗口输出
+        prepareBuiltin();
     }
 
     @Override
@@ -650,9 +676,28 @@ public class MainActivity extends Activity implements AdbLog {
                     connected ? R.color.ok_green : R.color.warn_amber, getTheme()));
         }
         if (s.btnMirror != null) {
-            s.btnMirror.setText(connected ? R.string.btn_mirror : R.string.btn_link);
+            applyMirrorButton(s, s.mirroring);
         }
         refreshRowButtons(s);
+    }
+
+    /**
+     * 行内投屏按钮的两种外观：
+     * 未投屏 → 蓝底「投屏」（发现但未连接时是「连接」）；投屏中 → 红底「停止」，颜色随状态来回切。
+     */
+    private void applyMirrorButton(Session s, boolean mirroring) {
+        if (s == null || s.btnMirror == null) {
+            return;
+        }
+        if (mirroring) {
+            s.btnMirror.setText(R.string.btn_mirror_stop);
+            s.btnMirror.setBackgroundTintList(ColorStateList.valueOf(
+                    getResources().getColor(R.color.danger, getTheme())));
+        } else {
+            s.btnMirror.setText(s.discovered ? R.string.btn_link : R.string.btn_mirror);
+            s.btnMirror.setBackgroundTintList(ColorStateList.valueOf(
+                    getResources().getColor(R.color.primary, getTheme())));
+        }
     }
 
     private void refreshRowButtons(Session s) {
@@ -1074,7 +1119,7 @@ public class MainActivity extends Activity implements AdbLog {
         }
         activeSession = session;
         session.mirroring = true;
-        session.btnMirror.setText(R.string.btn_mirror_stop);
+        applyMirrorButton(session, true);
         session.tvState.setText("投屏中");
         tvPreviewHint.setVisibility(View.GONE);
         tvPreviewState.setVisibility(View.VISIBLE);
@@ -1368,7 +1413,7 @@ public class MainActivity extends Activity implements AdbLog {
         if (s != null) {
             s.mirroring = false;
             if (s.btnMirror != null) {
-                s.btnMirror.setText(s.discovered ? R.string.btn_link : R.string.btn_mirror);
+                applyMirrorButton(s, false);
                 if (s.tvState != null && s.dev != null) {
                     s.tvState.setText("已连接");
                     s.tvState.setTextColor(getResources().getColor(R.color.ok_green, getTheme()));
@@ -1580,19 +1625,280 @@ public class MainActivity extends Activity implements AdbLog {
         if (session == null) {
             return;
         }
+        installSession = session;
+        // 已选过的本地安装包在重连/重新打开弹窗后继续保留，换设备时也可见（由用户自行确认）
+        showInstallDialog(session);
+    }
+
+    /** 弹窗正文：待安装应用信息 + 已选本地安装包（不出现任何「内置」字样） */
+    private String installDialogText(Session session, BuiltinMeta meta) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("目标设备：").append(rowName(session)).append("\n\n");
+        if (hasBuiltin(meta)) {
+            sb.append("待安装应用\n");
+            sb.append("应用名称：").append(meta.label.isEmpty() ? "-" : meta.label).append('\n');
+            sb.append("包名：").append(meta.pkg.isEmpty() ? "-" : meta.pkg).append('\n');
+            sb.append("版本：").append(versionText(meta)).append('\n');
+            sb.append("大小：").append(AdbDevice.human(meta.size));
+        } else {
+            sb.append("本次未随应用打包安装包文件，");
+            sb.append("请点「从手机选择 APK」选择安装包。");
+        }
+        sb.append("\n\n");
+        if (pickedUri != null) {
+            sb.append("已选择安装包：").append(pickedName);
+            if (pickedSize > 0) {
+                sb.append("（").append(AdbDevice.human(pickedSize)).append("）");
+            }
+        } else {
+            sb.append("已选择安装包：无");
+        }
+        return sb.toString();
+    }
+
+    private void showInstallDialog(final Session session) {
         final BuiltinMeta meta = readBuiltinMeta();
-        new AlertDialog.Builder(this)
+        // 每次都用新的 TextView：旧弹窗关闭后视图仍挂在原来的 Dialog 上，复用会抛
+        // IllegalStateException: The specified child already has a parent
+        installInfoView = new TextView(this);
+        int pad = (int) (18 * getResources().getDisplayMetrics().density);
+        installInfoView.setPadding(pad, pad, pad, 0);
+        installInfoView.setTextSize(15f);
+        installInfoView.setTextColor(0xFF222222);
+        installInfoView.setTextIsSelectable(true);
+        installInfoView.setText(installDialogText(session, meta));
+
+        AlertDialog.Builder b = new AlertDialog.Builder(this)
                 .setTitle("安装软件")
-                .setMessage("将安装「" + meta.label + "」" + (meta.pkg.isEmpty() ? "" : "\n包名：" + meta.pkg)
-                        + "\n目标设备：" + rowName(session) + "（无需 root）")
-                .setPositiveButton("开始安装", new DialogInterface.OnClickListener() {
+                .setView(installInfoView)
+                .setPositiveButton("安装应用", null)
+                .setNeutralButton("从手机选择 APK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        doInstall(session, meta);
+                        pickApkFromPhone(session);
                     }
                 })
                 .setNegativeButton("取消", null)
-                .show();
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        installDialog = null;
+                    }
+                });
+        installDialog = b.create();
+        installDialog.show();
+        // 自己接管点击：没有可选安装包时只提示，不关闭弹窗
+        installDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (pickedUri != null) {
+                    Session s = installSession;
+                    Uri u = pickedUri;
+                    pickedUri = null;
+                    pickedName = "";
+                    pickedSize = -1;
+                    if (installDialog != null) {
+                        installDialog.dismiss();
+                    }
+                    if (s == null || s.dev == null) {
+                        toast("设备已断开，请重新连接后再安装");
+                        return;
+                    }
+                    installFromUri(s, u);
+                    return;
+                }
+                BuiltinMeta m = readBuiltinMeta();
+                if (hasBuiltin(m)) {
+                    Session s = installSession;
+                    if (installDialog != null) {
+                        installDialog.dismiss();
+                    }
+                    if (s == null || s.dev == null) {
+                        toast("设备已断开，请重新连接后再安装");
+                        return;
+                    }
+                    doInstall(s, m);
+                    return;
+                }
+                toast("请选择APK安装包文件");
+            }
+        });
+    }
+
+
+    /** 只有在打包含成功写过 payload.idx（size>0）时才算有内置包 */
+    private boolean hasBuiltin(BuiltinMeta meta) {
+        return meta != null && meta.size > 0;
+    }
+
+    private String versionText(BuiltinMeta meta) {
+        String name = meta.versionName == null ? "" : meta.versionName.trim();
+        String code = meta.versionCode == null ? "" : meta.versionCode.trim();
+        if (name.isEmpty() && code.isEmpty()) {
+            return "-";
+        }
+        if (code.isEmpty()) {
+            return name;
+        }
+        return name.isEmpty() ? "versionCode " + code : name + "（versionCode " + code + "）";
+    }
+
+    // --------------------------------------------------------- 从手机本地选 APK
+
+    /** 打开系统文件选择器，让用户从手机本地目录挑一个 APK */
+    private void pickApkFromPhone(Session session) {
+        pendingInstallSession = session;
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/vnd.android.package-archive");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        try {
+            startActivityForResult(Intent.createChooser(intent, "选择 APK 安装包"), REQ_PICK_APK);
+        } catch (Exception e) {
+            pendingInstallSession = null;
+            log(ERR, "打开文件选择器失败：" + msg(e));
+            toast("没有找到可用的文件管理器");
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQ_PICK_APK) {
+            return;
+        }
+        Session session = pendingInstallSession;
+        pendingInstallSession = null;
+        Uri uri = (resultCode == RESULT_OK && data != null) ? data.getData() : null;
+        if (uri == null) {
+            return;
+        }
+        if (session == null || session.dev == null) {
+            toast("设备已断开，请重新连接后再安装");
+            return;
+        }
+        // 只记录所选安装包，由用户点「安装应用」后才真正开始安装
+        String[] info = queryPickInfo(uri);
+        pickedUri = uri;
+        pickedName = info[0];
+        pickedSize = parseLong(info[1]);
+        installSession = session;
+        log(INFO, "已选择安装包：" + pickedName + (pickedSize > 0 ? "（" + AdbDevice.human(pickedSize) + "）" : ""));
+        if (installDialog != null && installInfoView != null) {
+            installInfoView.setText(installDialogText(session, readBuiltinMeta()));
+        } else {
+            showInstallDialog(session);
+        }
+        toast("已选择：" + pickedName + "，请点「安装应用」开始安装");
+    }
+
+    /** 读取用户选中的 APK 并安装：边读边传，装完删除设备侧临时文件 */
+    private void installFromUri(final Session session, final Uri uri) {
+        final String[] info = queryPickInfo(uri);   // [0]=文件名 [1]=大小(可能为空)
+        final String fileName = info[0];
+        final long declared = parseLong(info[1]);
+        worker.execute(new Runnable() {
+            @Override
+            public void run() {
+                String name = rowName(session);
+                InputStream in = null;
+                try {
+                    in = getContentResolver().openInputStream(uri);
+                    if (in == null) {
+                        throw new IOException("无法读取所选文件");
+                    }
+                    ensureAlive(session);
+                    long total = declared > 0 ? declared : -1;
+                    log(INFO, "开始安装「" + fileName + "」→ " + name
+                            + (total > 0 ? "（" + AdbDevice.human(total) + "）" : ""));
+                    updateState(session, "上传中");
+                    final int[] lastPct = {-1};
+                    String result = session.dev.installApk(in, total, new AdbDevice.ProgressListener() {
+                        @Override
+                        public void onProgress(long sent, long tot) {
+                            if (tot <= 0) {
+                                updateState(session, "上传 " + AdbDevice.human(sent));
+                                return;
+                            }
+                            final int pct = (int) (sent * 100 / tot);
+                            if (pct >= lastPct[0] + 20 || pct >= 100) {
+                                lastPct[0] = pct;
+                                log(INFO, "上传安装包 " + pct + "%");
+                            }
+                            updateState(session, "上传 " + pct + "%");
+                        }
+                    });
+                    final String res = result;
+                    ensureAlive(session);
+                    ui.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateState(session, "已连接");
+                            if (res.toLowerCase().contains("success")) {
+                                log(OK, "安装成功：" + fileName);
+                                toast("安装成功");
+                            } else {
+                                log(ERR, "安装失败：" + res);
+                                toast("安装失败，详见日志");
+                            }
+                        }
+                    });
+                } catch (Exception e) {
+                    final String m = msg(e);
+                    ui.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateState(session, "已连接");
+                            log(ERR, "安装异常：" + m);
+                            toast("安装失败，详见日志");
+                        }
+                    });
+                } finally {
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (IOException ignored) {
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /** 用 ContentResolver 查文件名与大小（不同文件管理器返回的不一样，拿不到就用兜底名） */
+    private String[] queryPickInfo(Uri uri) {
+        String fileName = "所选安装包";
+        String size = "";
+        Cursor c = null;
+        try {
+            c = getContentResolver().query(uri, null, null, null, null);
+            if (c != null && c.moveToFirst()) {
+                int ni = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (ni >= 0 && !c.isNull(ni)) {
+                    fileName = c.getString(ni);
+                }
+                int si = c.getColumnIndex(OpenableColumns.SIZE);
+                if (si >= 0 && !c.isNull(si)) {
+                    size = String.valueOf(c.getLong(si));
+                }
+            }
+        } catch (Exception ignored) {
+        } finally {
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return new String[]{fileName, size};
+    }
+
+    private long parseLong(String s) {
+        try {
+            return Long.parseLong(s);
+        } catch (Exception e) {
+            return -1;
+        }
     }
 
     private void doInstall(final Session session, final BuiltinMeta meta) {
@@ -1887,7 +2193,9 @@ public class MainActivity extends Activity implements AdbLog {
             // properties 文件是 UTF-8 编码，必须用 Reader 读，否则中文会乱码
             p.load(new java.io.InputStreamReader(in, "UTF-8"));
             meta.pkg = p.getProperty("package", "").trim();
-            meta.label = p.getProperty("label", "内置应用").trim();
+            meta.label = p.getProperty("label", "").trim();
+            meta.versionName = p.getProperty("versionName", "").trim();
+            meta.versionCode = p.getProperty("versionCode", "").trim();
             try {
                 meta.size = Long.parseLong(p.getProperty("size", "0").trim());
             } catch (Exception ignored) {
@@ -1898,7 +2206,8 @@ public class MainActivity extends Activity implements AdbLog {
             } catch (Exception ignored) {
             }
         } catch (Exception e) {
-            meta.label = "内置应用";
+            meta.label = "";
+            meta.size = 0;
         } finally {
             if (in != null) {
                 try {
@@ -1922,19 +2231,68 @@ public class MainActivity extends Activity implements AdbLog {
         return stream;
     }
 
-    private void logBuiltinInfo() {
-        BuiltinMeta meta = readBuiltinMeta();
+    /**
+     * 启动时的内置包准备：只清掉历史版本遗留的明文缓存，
+     * 不再往日志窗口输出包名/大小等信息（避免提示「App 里藏了资源」）。
+     */
+    private void prepareBuiltin() {
         // 老版本会把解密后的 APK 缓存在应用私有目录，这里统一清掉
         File stale = new File(getCacheDir(), "builtin.apk");
         if (stale.isFile()) {
             stale.delete();
         }
-        if (meta.pkg.isEmpty()) {
-            log(WARN, "内置 APK：未识别到包名，请确认 apk 目录下的安装包可被 aapt 解析后重新打包");
-        } else {
-            log(INFO, "内置 APK：" + meta.label + "  包名 " + meta.pkg
-                    + (meta.size > 0 ? "  " + AdbDevice.human(meta.size) : ""));
+    }
+
+    // --------------------------------------------------------------- 版本与网络
+
+    private String versionName() {
+        try {
+            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return pi.versionName == null ? "?" : pi.versionName;
+        } catch (Exception e) {
+            return "?";
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private int versionCode() {
+        try {
+            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return pi.versionCode;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /**
+     * 本机 IPv4：优先 wlan 网卡（手机对外通信就是这张），其次任意非回环、非链路本地地址。
+     * 拿不到时返回提示语，不抛异常（没有 Wi-Fi 也能正常工作，只是不能扫网段）。
+     */
+    private String localIp() {
+        String fallback = null;
+        try {
+            for (NetworkInterface nif : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                if (!nif.isUp() || nif.isLoopback()) {
+                    continue;
+                }
+                for (InetAddress addr : Collections.list(nif.getInetAddresses())) {
+                    if (!(addr instanceof Inet4Address) || addr.isLoopbackAddress()
+                            || addr.isLinkLocalAddress()) {
+                        continue;
+                    }
+                    String ip = addr.getHostAddress();
+                    String name = nif.getName();
+                    if (name.startsWith("wlan")) {
+                        return ip + "（" + name + "）";
+                    }
+                    if (fallback == null) {
+                        fallback = ip + "（" + name + "）";
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return fallback == null ? "未获取到本机 IP（请确认手机已连接 Wi-Fi）" : fallback;
     }
 
     // ------------------------------------------------------------------- 日志

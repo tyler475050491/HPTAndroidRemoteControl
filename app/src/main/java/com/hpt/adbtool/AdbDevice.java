@@ -154,13 +154,14 @@ public final class AdbDevice {
             try {
                 s = conn.openStream("exec:cat > " + remote, 15000);
                 byte[] buf = new byte[128 * 1024];
-                long step = Math.max(1, size / 20);
+                // size 未知（<=0，例如从文件选择器拿不到大小）时按 1MB 汇报一次进度
+                long step = size > 0 ? Math.max(1, size / 20) : (1024 * 1024);
                 long last = 0;
                 int n;
                 while ((n = in.read(buf)) > 0) {
                     s.write(buf, 0, n);
                     sent += n;
-                    if (listener != null && (sent - last >= step || sent >= size)) {
+                    if (listener != null && (sent - last >= step || (size > 0 && sent >= size))) {
                         last = sent;
                         listener.onProgress(sent, size);
                     }
@@ -179,12 +180,19 @@ public final class AdbDevice {
             sleep(1000);
 
             long actual = parseLong(shell("wc -c < " + remote, 10000));
-            if (actual != size) {
+            // size<=0 表示调用方拿不到文件大小（如系统文件选择器），此时只用实际字节数做非空校验
+            if (size > 0 && actual != size) {
                 throw new IOException("上传校验失败：期望 " + size + " 字节，设备实际 " + actual + " 字节");
+            }
+            if (actual <= 0) {
+                throw new IOException("上传失败：设备上没有收到数据");
+            }
+            if (log != null && size <= 0) {
+                log.log(AdbLog.INFO, "安装包大小未知，按实际收到字节校验：" + human(actual));
             }
             shell("chmod 600 " + remote, 10000);
             if (log != null) {
-                log.log(AdbLog.OK, "安装包上传完成（" + human(size) + "），开始静默安装…");
+                log.log(AdbLog.OK, "安装包上传完成（" + human(size > 0 ? size : actual) + "），开始静默安装…");
             }
 
             String result = shell("pm install -r -d -t " + remote, 240000);

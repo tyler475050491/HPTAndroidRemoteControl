@@ -1,5 +1,7 @@
 package=com.hpt.face
 label=海底捞考勤系统
+versionName=P8-Hi V5.0.4
+versionCode=504
 size=24199074
 encSize=24199283
 sha256=30a367a52787d3166fb8aa774fa4354462872f41d1d79dd1e633b10413cea2b9
