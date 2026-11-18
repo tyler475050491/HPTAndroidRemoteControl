@@ -1,0 +1,3 @@
+[server] INFO: Device: [rockchip] rockchip HPT-R3568 (Android 11)
+[server] DEBUG: Using video encoder: 'OMX.rk.video_encoder.avc'
+[server] DEBUG: Display: using SurfaceControl API

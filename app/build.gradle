@@ -1,0 +1,234 @@
+plugins {
+    id 'com.android.application'
+}
+
+// ---------------------------------------------------------------------------
+// 正式版签名：证书与口令放在 keystore.properties + keystore/hpt-release.jks。
+// debug 与 release 都用这套证书，原因有二：
+//   1) 交付给客户的正式包必须是正式签名，不能是 debug 证书；
+//   2) 内置包密钥绑定签名证书，若两个 buildType 用不同证书，另一侧就解不出内置包。
+// ---------------------------------------------------------------------------
+def ksProps = new Properties()
+def ksPropsFile = rootProject.file('keystore.properties')
+if (ksPropsFile.isFile()) {
+    ksPropsFile.withInputStream { ksProps.load(it) }
+}
+
+android {
+    namespace 'com.hpt.adbtool'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.hpt.adbtool"
+        minSdk 24
+        targetSdk 34
+        versionCode 2
+        versionName "1.0.1"
+    }
+
+    signingConfigs {
+        release {
+            if (ksPropsFile.isFile()) {
+                storeFile rootProject.file(ksProps.getProperty('storeFile'))
+                storePassword ksProps.getProperty('storePassword')
+                keyAlias ksProps.getProperty('keyAlias')
+                keyPassword ksProps.getProperty('keyPassword')
+                enableV1Signing true
+                enableV2Signing true
+                enableV3Signing true
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+        release {
+            // 正式版：代码混淆 + 资源压缩 + 去符号，anti-reversing
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            debuggable false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 内置安装包的处理：
+//   1) 取 apk 目录下最新的安装包
+//   2) 用「口令+盐 与 签名证书 SHA-256」派生的 AES-256 密钥，按 4MB 分块 AES-GCM 加密，
+//      写进 assets/hpt_payload.dat（assets 里不留明文 APK，也不留任何 apk 字样）
+//   3) 容器头带 4 字节 keyCheck，客户端在解密前就能判断"证书不匹配"，无需等到 GCM 失败
+//   4) 只写 payload.idx（包名/应用名/大小/校验值），不写算法与来源文件名
+// 客户端（MainActivity.openBuiltinApkStream → BuiltinApkStream）用同样的派生方式解密，
+// 明文全程只在内存里，边解密边通过 ADB 上传；设备侧装完立即删除临时文件。
+//
+// 注意：算法必须与 com.hpt.adbtool.Secret 保持一致，改动任一侧都要同步另一侧。
+// ---------------------------------------------------------------------------
+tasks.register('syncBuiltinApk') {
+    description = '把 apk 目录下的安装包加密打包为应用内置资源'
+    def BLOB = 'HPT2026#AdbTool#Builtin|hpt-builtin-apk-v1'   // 与 Secret.java 的 BLOB 解码结果一致
+    def apkDir = rootProject.file('apk')
+    def assetsDir = file('src/main/assets')
+    def outEnc = new File(assetsDir, 'hpt_payload.dat')
+    def outIdx = new File(assetsDir, 'payload.idx')
+    inputs.dir(apkDir)
+    inputs.file(ksPropsFile)
+    outputs.files(outEnc, outIdx)
+
+    doLast {
+        def apks = apkDir.listFiles()?.findAll { it.isFile() && it.name.toLowerCase().endsWith('.apk') }
+        if (!apks) {
+            throw new GradleException("apk 目录下没有找到安装包: ${apkDir}")
+        }
+        def src = apks.sort { it.lastModified() }.last()
+        assetsDir.mkdirs()
+
+        // ---- 用签名证书算出与运行期一致的密钥
+        def md = java.security.MessageDigest.getInstance('SHA-256')
+        def certDer
+        try {
+            def ks = java.security.KeyStore.getInstance('PKCS12')
+            def ksIn = new java.io.FileInputStream(rootProject.file(ksProps.getProperty('storeFile')))
+            try {
+                ks.load(ksIn, ksProps.getProperty('storePassword').toCharArray())
+            } finally {
+                ksIn.close()
+            }
+            certDer = ks.getCertificate(ksProps.getProperty('keyAlias')).getEncoded()
+        } catch (Exception e) {
+            throw new GradleException("读取签名证书失败（keystore.properties / keystore 是否齐全？）: ${e.message}")
+        }
+        byte[] certDigest = md.digest(certDer)
+        md.reset()
+        md.update(BLOB.getBytes('UTF-8'))
+        md.update((byte) '|')
+        md.update(certDigest)
+        byte[] keyBytes = md.digest()
+        md.reset()
+        byte[] keyHash = md.digest(keyBytes)
+        int ck0 = keyHash[0] & 0xFF, ck1 = keyHash[1] & 0xFF, ck2 = keyHash[2] & 0xFF, ck3 = keyHash[3] & 0xFF
+
+        long plainSize = src.length()
+        int CHUNK = 4 * 1024 * 1024
+        def keySpec = new javax.crypto.spec.SecretKeySpec(keyBytes, 'AES')
+        def cipher = javax.crypto.Cipher.getInstance('AES/GCM/NoPadding')
+        def rnd = new java.security.SecureRandom()
+        def sha = java.security.MessageDigest.getInstance('SHA-256')
+        int chunkCount = (int) ((plainSize + CHUNK - 1) / CHUNK)
+
+        // 容器格式: "HPTK"(4) | version(1)=2 | chunkSize(4) | chunkCount(4) | keyCheck(4) |
+        //           { iv(12) | ctLen(4) | ciphertext }
+        def out = new java.io.DataOutputStream(new java.io.FileOutputStream(outEnc))
+        def fis = new java.io.FileInputStream(src)
+        long encBytes
+        try {
+            out.writeBytes('HPTK')
+            out.writeByte(2)
+            out.writeInt(CHUNK)
+            out.writeInt(chunkCount)
+            out.writeByte(ck0)
+            out.writeByte(ck1)
+            out.writeByte(ck2)
+            out.writeByte(ck3)
+            encBytes = 17
+            byte[] buf = new byte[CHUNK]
+            for (int i = 0; i < chunkCount; i++) {
+                int want = (int) Math.min((long) CHUNK, plainSize - (long) i * CHUNK)
+                int got = 0
+                while (got < want) {
+                    int n = fis.read(buf, got, want - got)
+                    if (n <= 0) throw new GradleException("读取源 APK 失败（偏移 ${i * CHUNK}）")
+                    got += n
+                }
+                sha.update(buf, 0, want)
+                byte[] iv = new byte[12]
+                rnd.nextBytes(iv)
+                cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keySpec,
+                        new javax.crypto.spec.GCMParameterSpec(128, iv))
+                byte[] ct = cipher.doFinal(buf, 0, want)
+                out.write(iv)
+                out.writeInt(ct.length)
+                out.write(ct)
+                encBytes += 12 + 4 + ct.length
+            }
+            out.flush()
+        } finally {
+            try { fis.close() } catch (Exception ignored) { }
+            try { out.close() } catch (Exception ignored) { }
+        }
+        // 清掉旧版本的明文/旧容器，避免残留线索
+        ['builtin.apk', 'builtin.apk.enc', 'builtin_info.properties'].each { name ->
+            def stale = new File(assetsDir, name)
+            if (stale.isFile() && stale.delete()) {
+                println "[内置包] 已删除旧资源 ${name}"
+            }
+        }
+        String sha256 = sha.digest().encodeHex().toString()
+        println "[内置包] ${src.name} ${plainSize} bytes -> ${outEnc.name} ${encBytes} bytes（AES-GCM ${chunkCount} 块，密钥绑定签名证书）"
+
+        // 用 aapt 解析包名与应用名
+        def sdkDir = System.getenv('ANDROID_HOME') ?: System.getenv('ANDROID_SDK_ROOT')
+        if (!sdkDir) {
+            def lp = rootProject.file('local.properties')
+            if (lp.isFile()) {
+                def props = new Properties()
+                lp.withInputStream { props.load(it) }
+                sdkDir = props.getProperty('sdk.dir')
+            }
+        }
+        def buildTools = sdkDir == null ? null : new File(sdkDir, 'build-tools')
+        def aapt = null
+        if (buildTools.isDirectory()) {
+            def candidates = buildTools.listFiles()?.findAll { new File(it, 'aapt.exe').isFile() }
+            if (candidates) {
+                candidates.sort { a, b -> a.name <=> b.name }
+                aapt = new File(candidates.last(), 'aapt.exe')
+            }
+        }
+        def pkg = ''
+        def label = ''
+        if (aapt != null) {
+            // aapt.exe 在中文路径下会解析失败，先复制到临时 ASCII 目录
+            def probe = null
+            try {
+                probe = new File(System.getProperty('java.io.tmpdir'), 'hpt_builtin_probe.apk')
+                probe.bytes = src.bytes
+                def pb = new ProcessBuilder(aapt.absolutePath, 'dump', 'badging', probe.absolutePath)
+                pb.redirectErrorStream(true)
+                def proc = pb.start()
+                def text = proc.inputStream.getText('UTF-8')
+                proc.waitFor()
+                def m = text =~ /package: name='([^']+)'/
+                if (m.find()) { pkg = m.group(1) }
+                def l = text =~ /application-label:'([^']+)'/
+                if (l.find()) { label = l.group(1) }
+            } catch (Exception e) {
+                println "[内置包] 解析异常: ${e.message}"
+            } finally {
+                if (probe != null) probe.delete()
+            }
+        }
+        outIdx.setText("package=${pkg}\nlabel=${label}\nsize=${plainSize}\n"
+                + "encSize=${encBytes}\nsha256=${sha256}\n", 'UTF-8')
+        println "[内置包] package=${pkg} label=${label}"
+        if (pkg == null || pkg.isEmpty()) {
+            println "[内置包] 警告：未能解析出包名，请检查 aapt 是否可用"
+        }
+    }
+}
+
+tasks.named('preBuild').configure { dependsOn 'syncBuiltinApk' }

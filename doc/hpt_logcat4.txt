@@ -1,0 +1,76 @@
+--------- beginning of main
+11-17 14:15:42.546 15365 15365 I HPT     : INFO 开始投屏：rockchip HPT-R3568（scrcpy-server v2.7 · H.264 30FPS）
+11-17 14:15:42.547 15365 20684 I HPT     : INFO [adb] → OPEN a0=2 a1=0 len=153
+11-17 14:15:43.564 15365 20684 I HPT     : INFO 推送 scrcpy-server v2.7（71200 字节）…
+11-17 14:15:43.567 15365 20684 I HPT     : INFO [adb] → OPEN a0=3 a1=0 len=44
+11-17 14:15:43.614 15365 20684 I HPT     : INFO scrcpy-server 推送完成（71200 字节）
+11-17 14:15:43.615 15365 20684 I HPT     : INFO [adb] → OPEN a0=4 a1=0 len=44
+11-17 14:15:45.654 15365 20684 I HPT     : INFO 启动设备端 scrcpy 服务：CLASSPATH=/data/local/tmp/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 2.7 log_level=info max_size=1024 max_fps=30 video_bit_rate=8000000 tunnel_forward=true audio=false control=true cleanup=false power_on=false stay_awake=true
+11-17 14:15:45.657 15365 20684 I HPT     : INFO [adb] → OPEN a0=5 a1=0 len=249
+11-17 14:15:45.677 15365 20684 I HPT     : INFO [adb] → OPEN a0=6 a1=0 len=20
+11-17 14:15:45.680 15365 20684 I HPT     : WARN 视频端口连接失败（第 1 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:15:46.033 15365 20684 I HPT     : INFO [adb] → OPEN a0=7 a1=0 len=20
+11-17 14:15:46.051 15365 20684 I HPT     : WARN 视频端口连接失败（第 2 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:15:46.323 15365 15365 I HPT     : INFO scrcpy-server：[server] INFO: Device: [rockchip] rockchip HPT-R3568 (Android 11)
+11-17 14:15:46.402 15365 20684 I HPT     : INFO [adb] → OPEN a0=8 a1=0 len=20
+11-17 14:15:46.405 15365 20684 I HPT     : WARN 视频端口连接失败（第 3 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:15:46.757 15365 20684 I HPT     : INFO [adb] → OPEN a0=9 a1=0 len=20
+11-17 14:15:47.112 15365 20684 I HPT     : INFO [adb] → OPEN a0=10 a1=0 len=20
+11-17 14:15:47.493 15365 20684 I HPT     : INFO [adb] → OPEN a0=11 a1=0 len=20
+11-17 14:15:47.863 15365 20684 I HPT     : INFO [adb] → OPEN a0=12 a1=0 len=20
+11-17 14:15:48.219 15365 20684 I HPT     : INFO [adb] → OPEN a0=13 a1=0 len=20
+11-17 14:15:48.587 15365 20684 I HPT     : INFO [adb] → OPEN a0=14 a1=0 len=20
+11-17 14:15:48.956 15365 20684 I HPT     : INFO [adb] → OPEN a0=15 a1=0 len=20
+11-17 14:15:49.310 15365 20684 I HPT     : INFO [adb] → OPEN a0=16 a1=0 len=20
+11-17 14:15:49.667 15365 20684 I HPT     : INFO [adb] → OPEN a0=17 a1=0 len=20
+11-17 14:15:50.036 15365 20684 I HPT     : INFO [adb] → OPEN a0=18 a1=0 len=20
+11-17 14:15:50.408 15365 20684 I HPT     : INFO [adb] → OPEN a0=19 a1=0 len=20
+11-17 14:15:50.779 15365 20684 I HPT     : INFO [adb] → OPEN a0=20 a1=0 len=20
+11-17 14:15:51.151 15365 20684 I HPT     : INFO [adb] → OPEN a0=21 a1=0 len=20
+11-17 14:15:51.523 15365 20684 I HPT     : INFO [adb] → OPEN a0=22 a1=0 len=20
+11-17 14:15:51.905 15365 20684 I HPT     : INFO [adb] → OPEN a0=23 a1=0 len=20
+11-17 14:15:52.260 15365 20684 I HPT     : INFO [adb] → OPEN a0=24 a1=0 len=20
+11-17 14:15:52.631 15365 20684 I HPT     : INFO [adb] → OPEN a0=25 a1=0 len=20
+11-17 14:15:53.002 15365 20684 I HPT     : INFO [adb] → OPEN a0=26 a1=0 len=20
+11-17 14:15:53.358 15365 20684 I HPT     : INFO [adb] → OPEN a0=27 a1=0 len=20
+11-17 14:15:53.739 15365 20684 I HPT     : INFO [adb] → OPEN a0=28 a1=0 len=20
+11-17 14:15:54.109 15365 20684 I HPT     : INFO [adb] → OPEN a0=29 a1=0 len=20
+11-17 14:15:54.464 15365 20684 I HPT     : INFO [adb] → OPEN a0=30 a1=0 len=20
+11-17 14:15:54.818 15365 20684 I HPT     : INFO [adb] → OPEN a0=31 a1=0 len=20
+11-17 14:15:55.183 15365 20684 I HPT     : INFO [adb] → OPEN a0=32 a1=0 len=20
+11-17 14:15:55.560 15365 20684 I HPT     : INFO [adb] → OPEN a0=33 a1=0 len=20
+11-17 14:15:55.929 15365 20684 I HPT     : INFO [adb] → OPEN a0=34 a1=0 len=20
+11-17 14:15:56.326 15365 20684 I HPT     : INFO [adb] → OPEN a0=35 a1=0 len=20
+11-17 14:15:56.700 15365 20684 I HPT     : INFO [adb] → OPEN a0=36 a1=0 len=20
+11-17 14:15:57.097 15365 20684 I HPT     : INFO [adb] → OPEN a0=37 a1=0 len=20
+11-17 14:15:57.454 15365 20684 I HPT     : INFO [adb] → OPEN a0=38 a1=0 len=20
+11-17 14:15:57.825 15365 20684 I HPT     : INFO [adb] → OPEN a0=39 a1=0 len=20
+11-17 14:15:58.196 15365 20684 I HPT     : INFO [adb] → OPEN a0=40 a1=0 len=20
+11-17 14:15:58.556 15365 20684 I HPT     : INFO [adb] → OPEN a0=41 a1=0 len=20
+11-17 14:15:58.927 15365 20684 I HPT     : INFO [adb] → OPEN a0=42 a1=0 len=20
+11-17 14:15:59.298 15365 20684 I HPT     : INFO [adb] → OPEN a0=43 a1=0 len=20
+11-17 14:15:59.677 15365 20684 I HPT     : INFO [adb] → OPEN a0=44 a1=0 len=20
+11-17 14:16:00.047 15365 20684 I HPT     : INFO [adb] → OPEN a0=45 a1=0 len=20
+11-17 14:16:00.418 15365 20684 I HPT     : INFO [adb] → OPEN a0=46 a1=0 len=20
+11-17 14:16:00.774 15365 20684 I HPT     : INFO [adb] → OPEN a0=47 a1=0 len=20
+11-17 14:16:01.144 15365 20684 I HPT     : INFO [adb] → OPEN a0=48 a1=0 len=20
+11-17 14:16:01.523 15365 20684 I HPT     : INFO [adb] → OPEN a0=49 a1=0 len=20
+11-17 14:16:01.878 15365 20684 I HPT     : INFO [adb] → OPEN a0=50 a1=0 len=20
+11-17 14:16:02.250 15365 20684 I HPT     : INFO [adb] → OPEN a0=51 a1=0 len=20
+11-17 14:16:02.622 15365 20684 I HPT     : INFO [adb] → OPEN a0=52 a1=0 len=20
+11-17 14:16:02.990 15365 20684 I HPT     : INFO [adb] → OPEN a0=53 a1=0 len=20
+11-17 14:16:03.368 15365 20684 I HPT     : INFO [adb] → OPEN a0=54 a1=0 len=20
+11-17 14:16:03.735 15365 20684 I HPT     : INFO [adb] → OPEN a0=55 a1=0 len=20
+11-17 14:16:04.106 15365 20684 I HPT     : INFO [adb] → OPEN a0=56 a1=0 len=20
+11-17 14:16:04.479 15365 20684 I HPT     : INFO [adb] → OPEN a0=57 a1=0 len=20
+11-17 14:16:04.838 15365 20684 I HPT     : INFO [adb] → OPEN a0=58 a1=0 len=20
+11-17 14:16:05.209 15365 20684 I HPT     : INFO [adb] → OPEN a0=59 a1=0 len=20
+11-17 14:16:05.580 15365 20684 I HPT     : INFO [adb] → OPEN a0=60 a1=0 len=20
+11-17 14:16:10.738 15365 20684 I HPT     : WARN 视频端口未就绪，重启设备端服务后重试：连不上设备端 scrcpy 视频端口（打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service）））
+11-17 14:16:11.770 15365 20684 I HPT     : INFO 启动设备端 scrcpy 服务：CLASSPATH=/data/local/tmp/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 2.7 log_level=info max_size=1024 max_fps=30 video_bit_rate=8000000 tunnel_forward=true audio=false control=true cleanup=false power_on=false stay_awake=true
+11-17 14:16:11.811 15365 20684 I HPT     : WARN 视频端口连接失败（第 1 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:16:12.189 15365 20684 I HPT     : WARN 视频端口连接失败（第 2 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:16:12.561 15365 20684 I HPT     : WARN 视频端口连接失败（第 3 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:16:37.101 15365 15365 I HPT     : WARN 视频流不可用：连不上设备端 scrcpy 视频端口（打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service）））
+11-17 14:16:37.366 15365 15365 I HPT     : INFO 已回退到 screencap 截图流（画面会明显变慢）
+11-17 14:16:37.453 15365 15365 I HPT     : INFO 投屏结束：已停止：连不上设备端 scrcpy 视频端口（打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service）））

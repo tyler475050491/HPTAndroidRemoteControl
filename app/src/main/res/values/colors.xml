@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#1565C0</color>
+    <color name="primary_dark">#0D47A1</color>
+    <color name="primary_light">#1E88E5</color>
+    <color name="accent">#00897B</color>
+    <color name="bg_page">#F2F4F7</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="text_main">#1A2029</color>
+    <color name="text_sub">#6B7684</color>
+    <color name="divider">#E1E6ED</color>
+    <color name="ok_green">#2E7D32</color>
+    <color name="warn_amber">#EF6C00</color>
+    <color name="err_red">#C62828</color>
+    <color name="log_bg">#14181F</color>
+    <color name="log_time">#4FB8E8</color>
+    <color name="log_text">#D6DCE4</color>
+    <color name="preview_bg">#0B0F14</color>
+    <color name="danger">#D32F2F</color>
+    <color name="install">#2E7D32</color>
+    <color name="uninstall">#C62828</color>
+    <color name="reboot">#EF6C00</color>
+    <!-- 搜索按钮专用紫（用户指定） -->
+    <color name="search_purple">#7B4FD3</color>
+    <color name="search_purple_dark">#6034B6</color>
+</resources>

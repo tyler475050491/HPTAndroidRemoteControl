@@ -1,0 +1,9 @@
+[proxy] listening on 5555 -> 192.168.0.226:5555
+[proxy] === new connection from ('192.168.0.117', 47716) ===
+[APP->DEV] CNXN a0=262144 a1=0 len=6 crc=87d0043d payload=b'host::'
+[DEV->APP] CNXN a0=16777217 a1=0 len=235 crc=0000582b payload=b''
+[DEV->APP] BAD-MAGIC cmd=0x69766564 magic=3d656d61 payload_off=0 rest=235
+[APP->DEV] OPEN a0=1 a1=0 len=128 crc=36395303 payload=b'exec:getprop ro.product.brand; getprop ro.product.model; getprop ro.build.version.release; getprop ro.build.version.sdk;'
+[DEV->APP] closed: timed out
+[APP->DEV] closed: [WinError 10053] 你的主机中的软件中止了一个已建立的连接。
+[proxy] === connection ended ===

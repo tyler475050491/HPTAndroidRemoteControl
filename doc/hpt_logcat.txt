@@ -1,0 +1,34 @@
+--------- beginning of main
+11-17 14:05:55.968 15365 15365 I HPT     : INFO 预览画布准备中，就绪后自动启动视频流…
+11-17 14:05:55.987 15365 15365 I HPT     : INFO 开始投屏：rockchip HPT-R3568（scrcpy-server v2.7 · H.264 30FPS）
+11-17 14:05:55.987 15365 17951 I HPT     : INFO [adb] → OPEN a0=2 a1=0 len=153
+11-17 14:05:56.501 15365 17951 I HPT     : INFO 推送 scrcpy-server v2.7（71200 字节）…
+11-17 14:05:56.502 15365 17951 I HPT     : INFO [adb] → OPEN a0=3 a1=0 len=44
+11-17 14:05:56.558 15365 17951 I HPT     : INFO scrcpy-server 推送完成（71200 字节）
+11-17 14:05:56.560 15365 17951 I HPT     : INFO [adb] → OPEN a0=4 a1=0 len=44
+11-17 14:05:58.609 15365 17951 I HPT     : INFO 启动设备端 scrcpy 服务：CLASSPATH=/data/local/tmp/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 2.7 log_level=info max_size=1024 max_fps=30 video_bit_rate=8000000 tunnel_forward=true audio=false control=true cleanup=false power_on=false stay_awake=true
+11-17 14:05:58.612 15365 17951 I HPT     : INFO [adb] → OPEN a0=5 a1=0 len=249
+11-17 14:05:58.640 15365 17951 I HPT     : INFO [adb] → OPEN a0=6 a1=0 len=20
+11-17 14:05:58.643 15365 17951 I HPT     : WARN 视频端口连接失败（第 1 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:05:58.997 15365 17951 I HPT     : INFO [adb] → OPEN a0=7 a1=0 len=20
+11-17 14:05:59.018 15365 17951 I HPT     : WARN 视频端口连接失败（第 2 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:05:59.179 15365 15365 I HPT     : INFO scrcpy-server：[server] INFO: Device: [rockchip] rockchip HPT-R3568 (Android 11)
+11-17 14:05:59.372 15365 17951 I HPT     : INFO [adb] → OPEN a0=8 a1=0 len=20
+11-17 14:05:59.375 15365 17951 I HPT     : WARN 视频端口连接失败（第 3 次）：打开服务失败：localabstract:scrcpy（设备拒绝打开该服务（可能不支持该 adb service））
+11-17 14:05:59.728 15365 17951 I HPT     : INFO [adb] → OPEN a0=9 a1=0 len=20
+11-17 14:06:00.099 15365 17951 I HPT     : INFO [adb] → OPEN a0=10 a1=0 len=20
+11-17 14:06:00.455 15365 17951 I HPT     : INFO [adb] → OPEN a0=11 a1=0 len=20
+11-17 14:06:00.811 15365 17951 I HPT     : INFO [adb] → OPEN a0=12 a1=0 len=20
+11-17 14:06:01.181 15365 17951 I HPT     : INFO [adb] → OPEN a0=13 a1=0 len=20
+11-17 14:06:01.559 15365 17951 I HPT     : INFO [adb] → OPEN a0=14 a1=0 len=20
+11-17 14:06:01.930 15365 17951 I HPT     : INFO [adb] → OPEN a0=15 a1=0 len=20
+11-17 14:06:02.300 15365 17951 I HPT     : INFO [adb] → OPEN a0=16 a1=0 len=20
+11-17 14:06:02.673 15365 17951 I HPT     : INFO [adb] → OPEN a0=17 a1=0 len=20
+11-17 14:06:03.043 15365 17951 I HPT     : INFO [adb] → OPEN a0=18 a1=0 len=20
+11-17 14:06:03.418 15365 17951 I HPT     : INFO [adb] → OPEN a0=19 a1=0 len=20
+11-17 14:06:03.774 15365 17951 I HPT     : INFO [adb] → OPEN a0=20 a1=0 len=20
+11-17 14:06:04.144 15365 17951 I HPT     : INFO [adb] → OPEN a0=21 a1=0 len=20
+11-17 14:06:04.516 15365 17951 I HPT     : INFO [adb] → OPEN a0=22 a1=0 len=20
+11-17 14:06:04.874 15365 17951 I HPT     : INFO [adb] → OPEN a0=23 a1=0 len=20
+11-17 14:06:05.243 15365 17951 I HPT     : INFO [adb] → OPEN a0=24 a1=0 len=20
+11-17 14:06:05.597 15365 17951 I HPT     : INFO [adb] → OPEN a0=25 a1=0 len=20

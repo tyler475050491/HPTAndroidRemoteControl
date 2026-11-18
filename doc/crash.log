@@ -1,0 +1,36 @@
+--------- beginning of crash
+11-17 13:33:31.608  5211  5211 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 5211 (main), pid 5211 (main)
+11-17 13:33:31.668  5234  5234 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+11-17 13:33:31.668  5234  5234 F DEBUG   : Build fingerprint: 'rockchip/YF3568_XXXE/YoungFeel:11/RD2A.211001.002/eng.jiaqi.20260525.101020:userdebug/release-keys'
+11-17 13:33:31.668  5234  5234 F DEBUG   : Revision: '0'
+11-17 13:33:31.668  5234  5234 F DEBUG   : ABI: 'arm64'
+11-17 13:33:31.669  5234  5234 F DEBUG   : Timestamp: 2026-11-17 13:33:31+0800
+11-17 13:33:31.669  5234  5234 F DEBUG   : pid: 5211, tid: 5211, name: main  >>> app_process <<<
+11-17 13:33:31.669  5234  5234 F DEBUG   : uid: 0
+11-17 13:33:31.669  5234  5234 F DEBUG   : signal 6 (SIGABRT), code -1 (SI_QUEUE), fault addr --------
+11-17 13:33:31.669  5234  5234 F DEBUG   : Abort message: 'No pending exception expected: java.lang.ClassNotFoundException: com.genymobile.scrcpy.Server
+11-17 13:33:31.669  5234  5234 F DEBUG   : (Throwable with empty stack trace)
+11-17 13:33:31.669  5234  5234 F DEBUG   : '
+11-17 13:33:31.670  5234  5234 F DEBUG   :     x0  0000000000000000  x1  000000000000145b  x2  0000000000000006  x3  0000007ffc3175b0
+11-17 13:33:31.670  5234  5234 F DEBUG   :     x4  604c64626071736a  x5  604c64626071736a  x6  604c64626071736a  x7  7f7f7f7f7f7f7f7f
+11-17 13:33:31.670  5234  5234 F DEBUG   :     x8  00000000000000f0  x9  0000007f621657c0  x10 ffffff80fffffbdf  x11 0000000000000001
+11-17 13:33:31.670  5234  5234 F DEBUG   :     x12 00000000c94d8d33  x13 c9f800000012810c  x14 0023c948316791cd  x15 0000000029aaaaf1
+11-17 13:33:31.670  5234  5234 F DEBUG   :     x16 0000007f621fdc80  x17 0000007f621df320  x18 0000007f66e7c000  x19 000000000000145b
+11-17 13:33:31.670  5234  5234 F DEBUG   :     x20 000000000000145b  x21 00000000ffffffff  x22 0000000000000002  x23 0000000000000002
+11-17 13:33:31.670  5234  5234 F DEBUG   :     x24 0000007cd10ec000  x25 0000007f6683e000  x26 0000007f6637586c  x27 0000007cd10ee000
+11-17 13:33:31.670  5234  5234 F DEBUG   :     x28 0000007cd10ef000  x29 0000007ffc317630
+11-17 13:33:31.670  5234  5234 F DEBUG   :     lr  0000007f62193148  sp  0000007ffc317590  pc  0000007f62193178  pst 0000000000001000
+11-17 13:33:31.689  5234  5234 F DEBUG   : backtrace:
+11-17 13:33:31.689  5234  5234 F DEBUG   :       #00 pc 000000000004e178  /apex/com.android.runtime/lib64/bionic/libc.so (abort+168) (BuildId: 23b47e338fca2b85af1ec50fd590d7c7)
+11-17 13:33:31.689  5234  5234 F DEBUG   :       #01 pc 0000000000552064  /apex/com.android.art/lib64/libart.so (art::Runtime::Abort(char const*)+2260) (BuildId: 307d6b84ad1e39574ae6a4149272a0a3)
+11-17 13:33:31.689  5234  5234 F DEBUG   :       #02 pc 0000000000013990  /system/lib64/libbase.so (android::base::SetAborter(std::__1::function<void (char const*)>&&)::$_3::__invoke(char const*)+76) (BuildId: 46870759aa3cab9f96ce2152bf079214)
+11-17 13:33:31.689  5234  5234 F DEBUG   :       #03 pc 0000000000012fb4  /system/lib64/libbase.so (android::base::LogMessage::~LogMessage()+320) (BuildId: 46870759aa3cab9f96ce2152bf079214)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #04 pc 00000000005a5b58  /apex/com.android.art/lib64/libart.so (art::Thread::AssertNoPendingException() const+1772) (BuildId: 307d6b84ad1e39574ae6a4149272a0a3)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #05 pc 00000000001d162c  /apex/com.android.art/lib64/libart.so (art::ClassLinker::FindClass(art::Thread*, char const*, art::Handle<art::mirror::ClassLoader>)+64) (BuildId: 307d6b84ad1e39574ae6a4149272a0a3)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #06 pc 00000000003904b4  /apex/com.android.art/lib64/libart.so (art::JNI<false>::FindClass(_JNIEnv*, char const*)+1012) (BuildId: 307d6b84ad1e39574ae6a4149272a0a3)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #07 pc 0000000000003040  /apex/com.android.art/lib64/libnativehelper.so (jniRegisterNativeMethods+44) (BuildId: 672dee9b94c5f8524d58d7c67b11cf5a)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #08 pc 000000000009cd34  /system/lib64/libandroid_runtime.so (android::register_com_android_internal_os_RuntimeInit(_JNIEnv*)+104) (BuildId: f485b20e3200c9039d2efb9f491e684f)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #09 pc 00000000000a0a2c  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::startReg(_JNIEnv*)+80) (BuildId: f485b20e3200c9039d2efb9f491e684f)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #10 pc 00000000000a0724  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+488) (BuildId: f485b20e3200c9039d2efb9f491e684f)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #11 pc 0000000000003574  /system/bin/app_process64 (main+1324) (BuildId: 725818c7651642761749444df1bc2755)
+11-17 13:33:31.690  5234  5234 F DEBUG   :       #12 pc 000000000004973c  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+108) (BuildId: 23b47e338fca2b85af1ec50fd590d7c7)

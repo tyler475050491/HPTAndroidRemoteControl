@@ -1,0 +1,113 @@
+--------- beginning of main
+11-17 13:44:34.406 10487 12432 I MediaCodec: The process name is com.hpt.adbtool 
+11-17 13:44:34.406 10487 12432 D MediaCodec: MediaCodec overwrite invalid pid -1->10487
+11-17 13:44:34.406 10487 12432 D MediaCodec: MediaCodec u-p-n client:10318-10487-com.hpt.adbtool process:10318-10487-com.hpt.adbtool
+11-17 13:44:34.406 10487 12432 I MediaCodec: MediaCodec::MediaCodec()
+11-17 13:44:34.412 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] setState: INITIALIZING
+11-17 13:44:34.470 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] setState: INITIALIZED
+11-17 13:44:34.473 10487 12432 I MediaCodec: [mId: 0] [video-debug-dec] configure: ClientName: com.hpt.adbtool ComponentName: c2.qti.avc.decoder
+11-17 13:44:34.473 10487 12432 I MediaCodec: [mId: 0] [video-debug-dec] configure: ClientFormat: AMessage(what = 0x00000000) = {
+11-17 13:44:34.473 10487 12432 I MediaCodec:   string mime = "video/avc"
+11-17 13:44:34.473 10487 12432 I MediaCodec:   int32_t width = 1024
+11-17 13:44:34.473 10487 12432 I MediaCodec:   int32_t height = 576
+11-17 13:44:34.473 10487 12432 I MediaCodec:   Buffer csd-0 = {
+11-17 13:44:34.473 10487 12432 I MediaCodec:     00000000:  00 00 00 01 67 42 c0 1f  8d 8d 50 20 02 49 08 00  ....gB....P .I..
+11-17 13:44:34.473 10487 12432 I MediaCodec:     00000010:  00 03 00 08 00 00 03 03  c4 78 44 23 50 00 00 00  .........xD#P...
+11-17 13:44:34.473 10487 12432 I MediaCodec:     00000020:  01 68 ce 31 b2                                    .h.1.
+11-17 13:44:34.473 10487 12432 I MediaCodec:   }
+11-17 13:44:34.473 10487 12432 I MediaCodec:   string activity = "com.hpt.adbtool.MainActivity"
+11-17 13:44:34.473 10487 12432 I MediaCodec: }
+11-17 13:44:34.475 10487 12432 I MediaCodec: init video box disabled for init not supported
+11-17 13:44:34.483 10487 12432 I MediaCodec: MediaStub sendDolbyVision
+11-17 13:44:34.484 10487 12432 I MediaCodec: MediaStub sendPackageName
+11-17 13:44:34.484 10487 12432 I MediaCodec: MediaStub sendWidth/sendHeight
+11-17 13:44:34.484 10487 12432 I MediaCodec: configure: video box disabled because codec is not video
+11-17 13:44:34.487 10487 12432 I MediaCodec: mComponentName: c2.qti.avc.decoder
+11-17 13:44:34.487 10487 12432 I MediaCodec: MediaStub sendMine
+11-17 13:44:34.487 10487 12432 D MediaCodec: currery video type video/avc
+11-17 13:44:34.487 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] connectToSurface: surface 0xb40000785b9d6d50, mSurface 0x0
+11-17 13:44:34.488 10487 12493 I MediaCodec: [c2.qti.avc.decoder] setting surface generation to 10738689
+11-17 13:44:34.488 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] setState: CONFIGURING
+11-17 13:44:34.491 10487 12493 I MediaCodec: SDR disable brighten
+11-17 13:44:34.491 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] setState: CONFIGURED
+11-17 13:44:34.492 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] setState: STARTING
+11-17 13:44:34.525 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] setState: STARTED
+11-17 13:44:34.527 10487 12508 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 1 pts: 4611686023044930909 timediff: 0
+11-17 13:44:34.535 10487 12508 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 2 pts: 4617643005 timediff: 8
+11-17 13:44:34.543 10487 12494 D MediaCodec: BufferCallback::onUpdateOutputBufferDelay
+11-17 13:44:34.543 10487 12493 D MediaCodec: kWhatNotifyOutputDelay
+11-17 13:44:34.557 10487 12493 I MediaCodec: remove Parameters:qti-ext-comp-id failed!
+11-17 13:44:34.557 10487 12493 I MediaCodec: SDR disable brighten
+11-17 13:44:34.595 10487 12508 I MediaCodec: [mId: 0] [video-debug-dec] queueInputBuffer: index: 3 pts: 4617743005 timediff: 60
+11-17 13:44:35.676 10487 12493 E MediaCodec: [TF-VIDEO] Codec reported err 0xffffffe0/DEAD_OBJECT, actionCode 0, while in state 6/STARTED
+11-17 13:44:35.677 10487 12493 E MediaCodec: Pending dequeue input buffer request cancelled
+11-17 13:44:35.677 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] disconnectFromSurface: mSurface 0xb40000785b9d6d50
+11-17 13:44:35.679 10487 12493 I MediaCodec: [mId: 0] [video-debug-dec] setState: UNINITIALIZED
+11-17 13:44:35.692  2105 16919 I MediaCodec: [mId: 619] [video-debug-dec] state 6 mFlags 3072 Stats 8282719ms:Client:com.miui.miwallpaper,Component:c2.qti.avc.decoder,Qin:0,DQin:0/0,Render:23,Drop:1,DQout:0/0
+11-17 13:44:35.693  2105 16919 E MediaCodec: [TF-VIDEO] Codec reported err 0xffffffe0/DEAD_OBJECT, actionCode 0, while in state 6/STARTED
+11-17 13:44:35.711  2105 16919 I MediaCodec: [mId: 619] [video-debug-dec] disconnectFromSurface: mSurface 0xb400007c0ced5680
+11-17 13:44:35.743  2105 16919 I MediaCodec: [mId: 619] [video-debug-dec] setState: UNINITIALIZED
+11-17 13:44:35.743  2105 16919 E MediaCodec: flush() is valid only at Executing states; currently at Released state
+11-17 13:44:35.752  2105 16918 I MediaCodec: MediaCodec::~MediaCodec()
+11-17 13:44:36.070  2105 12599 I MediaCodec: The process name is /system/bin/mediaserver64 
+11-17 13:44:36.070  2105 12599 D MediaCodec: MediaCodec u-p-n client:10168-4009-com.miui.miwallpaper process:1013-2105-/system/bin/mediaserver64
+11-17 13:44:36.070  2105 12599 I MediaCodec: MediaCodec::MediaCodec()
+11-17 13:44:36.072  2105 12600 I MediaCodec: [mId: 681] [video-debug-dec] setState: INITIALIZING
+11-17 13:44:36.120  2105 12600 I MediaCodec: [mId: 681] [video-debug-dec] setState: INITIALIZED
+11-17 13:44:36.123  2105 12599 I MediaCodec: [mId: 681] [video-debug-dec] configure: ClientName: com.miui.miwallpaper ComponentName: c2.qti.avc.decoder
+11-17 13:44:36.123  2105 12599 I MediaCodec: [mId: 681] [video-debug-dec] configure: ClientFormat: AMessage(what = 0x00000000) = {
+11-17 13:44:36.123  2105 12599 I MediaCodec:   string mime = "video/avc"
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int64_t durationUs = 6000000
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t frame-count = 180
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t max-bitrate = 56392292
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t track-id = 2
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t bitrate = 56392292
+11-17 13:44:36.123  2105 12599 I MediaCodec:   string language = "und"
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t width = 1080
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t height = 2400
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t display-width = 1080
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t display-height = 2400
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t color-range = 2
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t color-standard = 1
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t color-transfer = 3
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t max-input-size = 1808224
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t frame-rate = 30
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t profile = 8
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t level = 32768
+11-17 13:44:36.123  2105 12599 I MediaCodec:   Buffer csd-0 = {
+11-17 13:44:36.123  2105 12599 I MediaCodec:     00000000:  00 00 00 01 67 64 00 33  ac 72 84 40 44 01 2d e5  ....gd.3.r.@D.-.
+11-17 13:44:36.123  2105 12599 I MediaCodec:     00000010:  e6 a0 20 20 28 00 00 03  00 08 00 00 03 01 e0 78  ..  (..........x
+11-17 13:44:36.123  2105 12599 I MediaCodec:     00000020:  c1 8c 23                                          ..#
+11-17 13:44:36.123  2105 12599 I MediaCodec:   }
+11-17 13:44:36.123  2105 12599 I MediaCodec:   Buffer csd-1 = {
+11-17 13:44:36.123  2105 12599 I MediaCodec:     00000000:  00 00 00 01 68 e8 43 b2  c8 b0                    ....h.C...
+11-17 13:44:36.123  2105 12599 I MediaCodec:   }
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t priority = 0
+11-17 13:44:36.123  2105 12599 I MediaCodec:   float operating-rate = 30.000000
+11-17 13:44:36.123  2105 12599 I MediaCodec:   int32_t android._video-
+11-17 13:44:36.144  2105 12599 I MediaCodec: init video box disabled for init not supported
+11-17 13:44:36.148  2105 12599 I MediaCodec: MediaStub sendFrameRate : app set :30
+11-17 13:44:36.149  2105 12599 I MediaCodec: MediaStub sendDolbyVision
+11-17 13:44:36.149  2105 12599 I MediaCodec: MediaStub sendPackageName
+11-17 13:44:36.149  2105 12599 I MediaCodec: MediaStub sendWidth/sendHeight
+11-17 13:44:36.149  2105 12599 I MediaCodec: configure: video box disabled because codec is not video
+11-17 13:44:36.154  2105 12599 I MediaCodec: mComponentName: c2.qti.avc.decoder
+11-17 13:44:36.154  2105 12599 I MediaCodec: MediaStub sendMine
+11-17 13:44:36.154  2105 12599 D MediaCodec: currery video type video/avc
+11-17 13:44:36.155  2105 12600 I MediaCodec: [mId: 681] [video-debug-dec] connectToSurface: surface 0xb400007c0ced69d0, mSurface 0x0
+11-17 13:44:36.156  2105 12600 I MediaCodec: [c2.qti.avc.decoder] setting surface generation to 2155571
+11-17 13:44:36.160  2105 12600 I MediaCodec: [mId: 681] [video-debug-dec] setState: CONFIGURING
+11-17 13:44:36.171  2105 12600 I MediaCodec: SDR disable brighten
+11-17 13:44:36.171  2105 12600 I MediaCodec: [mId: 681] [video-debug-dec] setState: CONFIGURED
+11-17 13:44:36.174  2105 12600 I MediaCodec: MediaCodec will operate in async mode
+11-17 13:44:36.175  2105 12599 D MediaCodec: keep callback message for reclaim
+11-17 13:44:36.175  2105 12600 I MediaCodec: [mId: 681] [video-debug-dec] setState: STARTING
+11-17 13:44:36.240  2105 12600 I MediaCodec: [mId: 681] [video-debug-dec] setState: STARTED
+11-17 13:44:36.253  2105 12599 I MediaCodec: [mId: 681] [video-debug-dec] queueInputBuffer: index: 2 pts: 0 timediff: 0
+11-17 13:44:36.261  2105 12599 I MediaCodec: [mId: 681] [video-debug-dec] queueInputBuffer: index: 3 pts: 200000 timediff: 8
+11-17 13:44:36.268  2105 12599 I MediaCodec: [mId: 681] [video-debug-dec] queueInputBuffer: index: 0 pts: 100000 timediff: 7
+11-17 13:44:36.279  2105 12601 D MediaCodec: BufferCallback::onUpdateOutputBufferDelay
+11-17 13:44:36.279  2105 12600 D MediaCodec: kWhatNotifyOutputDelay
+11-17 13:44:36.418  2105 12600 I MediaCodec: remove Parameters:qti-ext-comp-id failed!
+11-17 13:44:36.418  2105 12600 I MediaCodec: SDR disable brighten
+11-17 13:44:36.423  2105 12600 I MediaCodec: [mId: 681] [video-debug-dec] onReleaseOutputBuffer index 0 pts: 0 ptsdiff: 0 timediff: 170513057 render: 1 mIsSurfaceToDisplay 1 

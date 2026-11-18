@@ -1,0 +1,4 @@
+E:\豆包\HPTADB\doc\tcp_proxy.py:71: DeprecationWarning: setDaemon() is deprecated, set the daemon attribute instead
+  t1.setDaemon(True)
+E:\豆包\HPTADB\doc\tcp_proxy.py:72: DeprecationWarning: setDaemon() is deprecated, set the daemon attribute instead
+  t2.setDaemon(True)

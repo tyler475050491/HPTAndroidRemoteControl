@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HPT远控</string>
+    <string name="title_in_app">HPT移动端ADB助手</string>
+    <string name="hint_host">IP / 域名</string>
+    <string name="hint_port">端口</string>
+    <string name="btn_connect">连接设备</string>
+    <string name="btn_refresh">刷新</string>
+    <string name="btn_search">搜索</string>
+    <string name="col_device">设备名称</string>
+    <string name="col_info">连接信息</string>
+    <string name="btn_mirror">投屏</string>
+    <string name="btn_mirror_stop">停止</string>
+    <string name="btn_link">连接</string>
+    <string name="btn_disconnect">断开</string>
+    <string name="btn_reboot">重启</string>
+    <string name="btn_install">安装软件</string>
+    <string name="btn_uninstall">卸载软件</string>
+    <string name="btn_exit_desktop">退出桌面</string>
+    <string name="btn_fullscreen">全屏</string>
+    <string name="btn_exit_fullscreen">退出全屏</string>
+    <string name="btn_rotate">旋转</string>
+    <string name="log_title">操作日志</string>
+    <string name="btn_clear_log">清空</string>
+    <string name="preview_hint">未投屏 · 连接设备后点击「投屏」预览屏幕</string>
+    <string name="no_device">暂无设备 · 可输入地址连接，或点「搜索」发现网段内的 ADB 设备</string>
+</resources>
